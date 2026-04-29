@@ -3,12 +3,32 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Building2, Calendar, Tag, ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 export const revalidate = 60;
 
 export async function generateStaticParams() {
   const tenders = await getTenders();
   return tenders.map((t) => ({ slug: t.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const t = await getTenderBySlug(slug);
+  if (!t) return { title: "Tender not found" };
+  const desc = `${t.entity} — ${t.category} tender (${t.method}, ${t.market}). Reference ${t.ref_no}. Closes ${t.deadline?.slice(0, 10)}. ${t.summary}`.slice(0, 200);
+  return {
+    title: `${t.title} — ${t.entity}`,
+    description: desc,
+    alternates: { canonical: `/tenders/${t.slug}` },
+    openGraph: {
+      type: "article",
+      url: `https://tenders.hulunem.com/tenders/${t.slug}`,
+      title: `${t.title} — ${t.entity}`,
+      description: desc,
+      publishedTime: t.invitation_date,
+    },
+  };
 }
 
 function fmt(d: string) {
@@ -22,6 +42,18 @@ export default async function TenderPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const t = await getTenderBySlug(slug);
   if (!t) notFound();
+
+  const jobJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "GovernmentService",
+    name: t.title,
+    provider: { "@type": "Organization", name: t.entity },
+    serviceType: t.category,
+    areaServed: { "@type": "Country", name: "Ethiopia" },
+    url: `https://tenders.hulunem.com/tenders/${t.slug}`,
+    description: t.summary,
+    identifier: t.ref_no,
+  };
 
   return (
     <div className="min-h-screen">
@@ -48,6 +80,7 @@ export default async function TenderPage({ params }: { params: Promise<{ slug: s
         </article>
       </main>
       <Footer />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobJsonLd) }} />
     </div>
   );
 }
