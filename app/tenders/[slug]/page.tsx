@@ -5,12 +5,8 @@ import { Building2, Calendar, Tag, ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
-
-export async function generateStaticParams() {
-  const tenders = await getTenders();
-  return tenders.map((t) => ({ slug: t.slug }));
-}
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

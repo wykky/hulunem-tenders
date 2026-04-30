@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PostHogProvider } from "./PostHogProvider";
 
 const SITE = "https://tenders.hulunem.com";
 
@@ -53,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       </head>
-      <body className="bg-bg text-gray-200 antialiased">{children}</body>
+      <body className="bg-bg text-gray-200 antialiased"><PostHogProvider>{children}</PostHogProvider></body>
     </html>
   );
 }
